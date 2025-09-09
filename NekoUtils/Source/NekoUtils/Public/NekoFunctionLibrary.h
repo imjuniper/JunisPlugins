@@ -207,13 +207,6 @@ public:
 	// Note: There are no other GetInfinity functions (for example GetInfinity_Int), because they always return 0 in Blueprints
 
 	///////////////////////////////////////////////////////////////////////////
-	/// Assets
-
-	/** Returns the soft object reference associated with a Primary Asset Id, this works even if the asset is not loaded */
-	UFUNCTION(BlueprintPure, Category = "AssetManager", meta=(DeterminesOutputType=ExpectedAssetType))
-	static TSoftObjectPtr<UObject> GetTypedSoftObjectReferenceFromPrimaryAssetId(FPrimaryAssetId PrimaryAssetId, TSubclassOf<UObject> ExpectedAssetType);
-
-	///////////////////////////////////////////////////////////////////////////
 	/// Inputs
 
 	/**
@@ -261,27 +254,6 @@ public:
 	 */
 	UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Widget", meta = (DefaultToSelf = "Widget"))
 	static bool IsOwningPlayerUsingGamepad(const UUserWidget* Widget);
-	
-	/**
-	 * Check if the owning player's UCommonInputSubsystem's current input type is Touch
-	 * 
-	 * @note This requires the game to be using CommonInput/CommonUI
-	 * @return Whether the owning player is using touch
-	 */
-	UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Widget", meta = (DefaultToSelf = "Widget"))
-	static bool IsOwningPlayerUsingTouch(const UUserWidget* Widget);
-
-	UFUNCTION(BlueprintPure, BlueprintCosmetic, Category = "Widget")
-	static UNekoRootUILayout* GetRootUILayout_ForPlayer(const APlayerController* PlayerController);
-
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
-	static UCommonActivatableWidget* PushWidgetToLayer_ForPlayer(APlayerController* PlayerController, UPARAM(meta=(Categories="UI.Layer")) FGameplayTag LayerName, UPARAM(meta = (AllowAbstract = false)) TSoftClassPtr<UCommonActivatableWidget> WidgetClass);
-
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
-	static void PushWidgetInstanceToLayer_ForPlayer(APlayerController* PlayerController, UPARAM(meta=(Categories="UI.Layer")) FGameplayTag LayerName, UCommonActivatableWidget* Widget);
-
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category = "Widget")
-	static void PopWidgetFromLayer(UCommonActivatableWidget* Widget);
 
 	///////////////////////////////////////////////////////////////////////////
 	/// Miscellaneous
@@ -294,59 +266,4 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	static void HideActorForPlayer(APlayerController* Player, AActor* Actor);
-
-	///////////////////////////////////////////////////////////////////////////
-	/// Custom thunk functions
-
-	/** Get a numbered element in the would be generated array of the provided HashMap */
-	UFUNCTION(BlueprintCallable, Category = "Utilities | Map", CustomThunk,
-			  meta = (DisplayName = "Get", CompactNodeTitle = "GET", MapParam = "TargetMap", MapKeyParam = "Key", MapValueParam = "Value", AutoCreateRefTerm = "Key, Value", BlueprintThreadSafe))
-	static void Map_Get(const TMap<int32, int32>& TargetMap, const int32 Index, int32& Key, int32& Value);
-
-	static void GenericMap_Get(void* TargetMap, const FMapProperty* MapProp, int32 Index, void* KeyPtr, void* ValuePtr);
-	DECLARE_FUNCTION(execMap_Get)
-	{
-		// Map
-		Stack.MostRecentProperty = nullptr;
-		Stack.StepCompiledIn<FMapProperty>(nullptr);
-		void* MapAddr = Stack.MostRecentPropertyAddress;
-		const FMapProperty* MapProperty = CastField<FMapProperty>(Stack.MostRecentProperty);
-		if (!MapProperty)
-		{
-			Stack.bArrayContextFailed = true;
-			return;
-		}
-
-		// Index
-		P_GET_PROPERTY(FIntProperty, Index);
-
-		// Key
-		const FProperty* CurrKeyProp = MapProperty->KeyProp;
-		const int32 KeyPropSize = CurrKeyProp->GetElementSize() * CurrKeyProp->ArrayDim;
-		void* KeyStorageSpace = FMemory_Alloca(KeyPropSize);
-		CurrKeyProp->InitializeValue(KeyStorageSpace);
-
-		Stack.MostRecentPropertyAddress = nullptr;
-		Stack.StepCompiledIn<FProperty>(KeyStorageSpace);
-		void* KeyPtr = (Stack.MostRecentPropertyAddress != nullptr && Stack.MostRecentProperty->GetClass() == CurrKeyProp->GetClass()) ? Stack.MostRecentPropertyAddress : KeyStorageSpace;
-
-		// Value
-		const FProperty* CurrValueProp = MapProperty->ValueProp;
-		const int32 ValuePropSize = CurrValueProp->GetElementSize() * CurrValueProp->ArrayDim;
-		void* ValueStorageSpace = FMemory_Alloca(ValuePropSize);
-		CurrValueProp->InitializeValue(ValueStorageSpace);
-
-		Stack.MostRecentPropertyAddress = nullptr;
-		Stack.StepCompiledIn<FProperty>(ValueStorageSpace);
-		void* ValuePtr = (Stack.MostRecentPropertyAddress != nullptr && Stack.MostRecentProperty->GetClass() == CurrValueProp->GetClass()) ? Stack.MostRecentPropertyAddress : ValueStorageSpace;
-
-		P_FINISH;
-
-		P_NATIVE_BEGIN;
-		GenericMap_Get(MapAddr, MapProperty, Index, KeyPtr, ValuePtr);
-		P_NATIVE_END;
-
-		CurrValueProp->DestroyValue(ValueStorageSpace);
-		CurrKeyProp->DestroyValue(KeyStorageSpace);
-	}
 };

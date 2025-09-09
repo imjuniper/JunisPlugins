@@ -237,37 +237,6 @@ double UNekoFunctionLibrary::GetInfinity_Double()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Assets
-
-TSoftObjectPtr<UObject> UNekoFunctionLibrary::GetTypedSoftObjectReferenceFromPrimaryAssetId(const FPrimaryAssetId PrimaryAssetId,
-	const TSubclassOf<UObject> ExpectedAssetType)
-{
-	if (UAssetManager* Manager = UAssetManager::GetIfInitialized())
-	{
-		FPrimaryAssetTypeInfo Info;
-		if (Manager->GetPrimaryAssetTypeInfo(PrimaryAssetId.PrimaryAssetType, Info) && !Info.bHasBlueprintClasses)
-		{
-			if (UClass* AssetClass = Info.AssetBaseClassLoaded)
-			{
-				if ((ExpectedAssetType == nullptr) || !AssetClass->IsChildOf(ExpectedAssetType))
-				{
-					return nullptr;
-				}
-			}
-			else
-			{
-				UE_LOG(LogNekoUtils, Warning, TEXT("GetTypedSoftObjectReferenceFromPrimaryAssetId(%s, %s) - AssetBaseClassLoaded was unset so we couldn't validate it, returning null"),
-					*PrimaryAssetId.ToString(),
-					*GetPathNameSafe(*ExpectedAssetType));
-			}
-
-			return TSoftObjectPtr<UObject>(Manager->GetPrimaryAssetPath(PrimaryAssetId));
-		}
-	}
-	return nullptr;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 /// Inputs
 
 void UNekoFunctionLibrary::SetCommonInputMode(APlayerController* PlayerController, ECommonInputMode InputMode, EMouseCaptureMode MouseMode, bool bHideCursorDuringViewportCapture)
@@ -335,65 +304,6 @@ bool UNekoFunctionLibrary::IsOwningPlayerUsingGamepad(const UUserWidget* Widget)
 	return false;
 }
 
-bool UNekoFunctionLibrary::IsOwningPlayerUsingTouch(const UUserWidget* Widget)
-{
-	if (Widget == nullptr) {
-		return false;
-	}
-
-	if (const UCommonInputSubsystem* InputSubsystem = UCommonInputSubsystem::Get(Widget->GetOwningLocalPlayer()))
-	{
-		return InputSubsystem->GetCurrentInputType() == ECommonInputType::Touch;
-	}
-
-	return false;
-}
-
-UNekoRootUILayout* UNekoFunctionLibrary::GetRootUILayout_ForPlayer(const APlayerController* PlayerController)
-{
-	if (const ULocalPlayer* LP = PlayerController->GetLocalPlayer())
-	{
-		if (const UNekoUIManager* Subsystem = LP->GetSubsystem<UNekoUIManager>())
-		{
-			return Subsystem->GetRootUILayout();
-		}
-	}
-	return nullptr;
-}
-
-UCommonActivatableWidget* UNekoFunctionLibrary::PushWidgetToLayer_ForPlayer(APlayerController* PlayerController,
-	FGameplayTag LayerName, TSoftClassPtr<UCommonActivatableWidget> WidgetClass)
-{
-	if (UNekoRootUILayout* Layout = GetRootUILayout_ForPlayer(PlayerController))
-	{
-		return Layout->PushWidgetToLayerStack(LayerName, WidgetClass);
-	}
-	return nullptr;
-}
-
-void UNekoFunctionLibrary::PushWidgetInstanceToLayer_ForPlayer(APlayerController* PlayerController,
-	FGameplayTag LayerName, UCommonActivatableWidget* Widget)
-{
-	if (UNekoRootUILayout* Layout = GetRootUILayout_ForPlayer(PlayerController))
-	{
-		Layout->PushWidgetInstanceToLayerStack(LayerName, Widget);
-	}
-}
-
-void UNekoFunctionLibrary::PopWidgetFromLayer(UCommonActivatableWidget* Widget)
-{
-	if (!Widget)
-	{
-		// Already destroyed
-		return;
-	}
-
-	if (UNekoRootUILayout* Layout = GetRootUILayout_ForPlayer(Widget->GetOwningPlayer()))
-	{
-		Layout->FindAndRemoveWidgetFromLayer(Widget);
-	}
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /// Miscellaneous
 
@@ -402,43 +312,5 @@ void UNekoFunctionLibrary::HideActorForPlayer(APlayerController* Player, AActor*
 	if (Player && Actor)
 	{
 		Player->HiddenActors.Add(Actor);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Custom thunk functions
-
-void UNekoFunctionLibrary::Map_Get(const TMap<int32, int32>& TargetMap, const int32 Index, int32& Key, int32& Value)
-{
-	checkNoEntry();
-}
-
-void UNekoFunctionLibrary::GenericMap_Get(void* TargetMap, const FMapProperty* MapProp, int32 Index, void* KeyPtr,
-                                          void* ValuePtr)
-{
-	if (TargetMap)
-	{
-		FScriptMapHelper MapHelper(MapProp, TargetMap);
-
-		FProperty* KeyProp = MapHelper.KeyProp;
-		FProperty* ValueProp = MapHelper.ValueProp;
-
-		if (MapHelper.IsValidIndex(Index))
-		{
-			KeyProp->CopyCompleteValueFromScriptVM(KeyPtr, MapHelper.GetKeyPtr(Index));
-			ValueProp->CopyCompleteValueFromScriptVM(ValuePtr, MapHelper.GetValuePtr(Index));
-		}
-		else
-		{
-			FFrame::KismetExecutionMessage(*FString::Printf(TEXT("Attempted to access index %d from map '%s' of length %d in '%s'!"),
-			                                                Index,
-			                                                *MapProp->GetName(),
-			                                                MapHelper.Num(),
-			                                                *MapProp->GetOwnerVariant().GetPathName()),
-			                               ELogVerbosity::Warning,
-			                               FName("GetOutOfBoundsWarning"));
-			KeyProp->InitializeValue(KeyPtr);
-			ValueProp->InitializeValue(ValuePtr);
-		}
 	}
 }
