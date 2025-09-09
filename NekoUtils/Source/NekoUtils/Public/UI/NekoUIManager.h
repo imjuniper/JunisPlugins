@@ -27,6 +27,6 @@ protected:
 	UPROPERTY(Transient)
 	TObjectPtr<UNekoRootUILayout> CurrentRootUILayout = nullptr;
 
-	UPROPERTY(Config, EditAnywhere)
+	UPROPERTY(Config)
 	TSoftClassPtr<UNekoRootUILayout> DefaultRootUILayoutClass;
 };

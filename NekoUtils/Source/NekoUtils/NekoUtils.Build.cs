@@ -22,6 +22,7 @@ public class NekoUtils : ModuleRules
 			"CommonInput",
 			"EngineSettings",
 			"UMG",
+			"Slate",
 		});
 	}
 }

@@ -4,10 +4,13 @@
 
 #include "NekoLogCategories.h"
 #include "PseudoTimelineLatentAction.h"
+#include "UI/NekoRootUILayout.h"
+#include "UI/NekoUIManager.h"
 
 #include "Blueprint/UserWidget.h"
 #include "CommonInputSubsystem.h"
 #include "Components/Widget.h"
+#include "Engine/AssetManager.h"
 #include "Engine/Engine.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"

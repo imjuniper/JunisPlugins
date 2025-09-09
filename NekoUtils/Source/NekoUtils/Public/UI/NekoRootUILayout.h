@@ -29,7 +29,7 @@ class NEKOUTILS_API UNekoRootUILayout : public UCommonUserWidget
 
 public:
 	/** Register a layer that widgets can be pushed onto. */
-	UFUNCTION(BlueprintCallable, Category="Layer")
+	UFUNCTION(BlueprintCallable, Category="Widget | Layer")
 	void RegisterLayer(UPARAM(meta = (Categories = "UI.Layer")) FGameplayTag LayerTag, UCommonActivatableWidgetContainerBase* LayerWidget);
 
 	template <typename ActivatableWidgetT = UCommonActivatableWidget>
@@ -51,10 +51,10 @@ public:
 		return nullptr;
 	}
 
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Layer")
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget | Layer")
 	UCommonActivatableWidget* PushWidgetToLayerStack(UPARAM(meta=(Categories="UI.Layer")) FGameplayTag LayerName, TSoftClassPtr<UCommonActivatableWidget> WidgetClass);
 
-	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Layer")
+	UFUNCTION(BlueprintCallable, BlueprintCosmetic, Category="Widget | Layer")
 	void PushWidgetInstanceToLayerStack(UPARAM(meta=(Categories="UI.Layer")) FGameplayTag LayerName, UCommonActivatableWidget* Widget);
 	
 	// Find the widget if it exists on any of the layers and remove it from the layer.

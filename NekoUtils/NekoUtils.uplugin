@@ -10,9 +10,9 @@
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
-	"CanContainContent": true,
+	"EnabledByDefault": true,
+	"CanContainContent": false,
 	"IsBetaVersion": false,
-	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
@@ -24,6 +24,12 @@
 			"Name": "NekoUtilsEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "CommonUI",
+			"Enabled": true
 		}
 	]
 }

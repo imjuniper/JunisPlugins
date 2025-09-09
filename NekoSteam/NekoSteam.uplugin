@@ -10,9 +10,10 @@
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
-	"EngineVersion": "5.5.0",
-	"CanContainContent": true,
-	"Installed": true,
+	"EnabledByDefault": true,
+	"CanContainContent": false,
+	"IsBetaVersion": false,
+	"Installed": false,
 	"Modules": [
 		{
 			"Name": "NekoSteam",
